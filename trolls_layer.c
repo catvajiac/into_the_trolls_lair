@@ -7,7 +7,7 @@
 #include "trolls_layer.h"
 #include "list.h"
 
-char * MAIN_OFFICE =  "main.txt";
+Todos todos;
 
 struct list * parse_rules(FILE *input) {
   struct list *commands = list_create();
@@ -59,7 +59,6 @@ struct list *read_room(char * room) {
   }
 
   return parse_rules(input);
-
 }
 
 int main() {
@@ -68,18 +67,25 @@ int main() {
 
   read_room("welcome");
   read_room("premise");
+
+  char *current_room = "bui_chair";
   struct list *commands = read_room("bui_chair");
   printf("What would you like to do?\n> ");
 
   char buffer[BUFSIZ];
   while(fgets(buffer, BUFSIZ, stdin)) {
-    char *command = strtok(buffer, " ");
-    char *arg = buffer + strlen(command) + 1;
     string_strip(buffer);
-    string_strip(command);
-    char * new_room = handle_command(commands, command, arg);
-    new_room = string_translate(new_room, " ", "_");
-    read_room(new_room);
+
+    char *transition = handle_command(commands, buffer);
+    if (transition) {
+      current_room = strdup(transition);
+    }
+
+    string_translate(current_room, " ", "_");
+    struct list* new_commands = read_room(current_room);
+    if (new_commands) {
+      commands = new_commands;
+    }
     printf("What would you like to do?\n> ");
   }
 

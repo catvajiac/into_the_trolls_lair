@@ -1,15 +1,18 @@
 #include <string.h>
+#include <stdio.h>
 
 void string_strip(char *s) {
   if (!s) {
     return;
   }
-
   char *c = s;
   while (c && *c != '\n') {
     c++;
   }
-  *c = 0;
+
+  if (c - s < strlen(s)) {
+    *c = 0;
+  }
 }
 
 int find_char_in_array(char * array, char c) {
