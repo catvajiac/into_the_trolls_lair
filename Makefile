@@ -1,14 +1,15 @@
 CC=gcc
-CFLAGS=-Wall -std=gnu99
+CFLAGS=-Wall -std=gnu99 -g
 LD=gcc
 LDFLAGS=-L.
 SOURCES=$(wildcard *.c)
 OBJECTS=$(SOURCES:.c=.o)
+DEPENDS=$(wildcard *.h)
 TARGET=trolls_lair
 
 all: $(TARGET)
 
-$(OBJECTS): %.o: %.c 
+$(OBJECTS): %.o: %.c  $(DEPENDS)
 	@echo "Compiling $@..."
 	@$(CC) $(CFLAGS) -c -o $@ $<
 

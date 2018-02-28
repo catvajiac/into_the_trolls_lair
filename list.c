@@ -5,15 +5,17 @@
 #include "list.h"
 
 /* node definitions */
-struct node * node_create(char *source, char *target, char *string, int unlock, struct node *next) {
+struct node * node_create(char *source, char *target, char *string, int unlock, struct node *prev, struct node *next) {
   struct node *n = malloc(sizeof(*next));
   n->source = strdup(source);
   n->target = strdup(target);
   n->string = strdup(string);
   n->unlock = unlock;
-  n->next = next;
+  n->next   = next;
+  n->prev   = prev;
   return n;
 }
+
 
 struct node * node_delete(struct node *n, bool recursive) {
   struct node *n_ptr = n;
@@ -31,6 +33,7 @@ struct node * node_delete(struct node *n, bool recursive) {
   return NULL;
 }
 
+
 void node_dump(struct node *n, FILE *stream) {
   if (n) {
     printf("node:\n");
@@ -43,6 +46,7 @@ void node_dump(struct node *n, FILE *stream) {
   }
 }
 
+
 /* list definitions */
 struct list * list_create() {
   struct list *l = malloc(sizeof(struct list));
@@ -52,30 +56,43 @@ struct list * list_create() {
   return l;
 }
 
+
 struct list * list_delete(struct list *l) {
   node_delete(l->head, 1); 
   free(l);
   return NULL;
 }
 
-void list_push_front(struct list *l, struct node *n) {
+
+struct node *list_push_front(struct list *l, char *s, char *t, char *str, int unlock) {
+  struct node *n = node_create(s, t, str, unlock, NULL, l->head);
   l->head = n;
   if (l->size == 0) {
     l->tail = l->head;
   }
+  if (n->next) {
+    n->next->prev = n;
+  }
+
   l->size++;
+  return n;
 }
 
-void list_push_back(struct list *l, struct node *n) {
+
+void list_push_back(struct list *l, char *s, char *t, char *str, int unlock) {
+  struct node *n = node_create(s, t, str, unlock, l->tail, NULL);
+  l->head = n;
   if (l->size >= 1) {
     l->tail->next = n;
   } else {
     l->head = n;
   }
+  if (n->prev) {
+    n->prev->next = n;
+  }
   l->tail = n;
   l->size++;
 }
-
 
 void list_dump(struct list *l, FILE *stream) {
   struct node *n_ptr = l->head;
