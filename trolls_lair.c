@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
   read_room("welcome");
   read_room("premise");
   state->commands = read_room(state->current_room);
-  printf("What would you like to do?\n> ");
+  print("What would you like to do?\n> ");
 
   while (status != END) {
     while ((status = handle_key(state)) == REGULAR) {}
