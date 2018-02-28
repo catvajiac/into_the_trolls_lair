@@ -3,7 +3,15 @@
 
 Todos todos;
 
-int main() {
+int main(int argc, char *argv[]) {
+  WIDTH = 80;
+  int arg = 1;
+  while (arg < argc) {
+    if (strcmp(argv[arg], "-w") == 0) {
+      WIDTH = atoi(argv[++arg]);
+    }
+    arg++;
+  }
   tcgetattr(STDIN_FILENO, &TERM_SETS);
   signal(SIGINT, handle_quit);
   signal(SIGHUP, handle_quit);

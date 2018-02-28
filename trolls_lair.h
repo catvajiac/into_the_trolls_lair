@@ -1,4 +1,5 @@
-/* trolls_lair.h */
+#ifndef TROLLH
+#define TROLLH
 
 #include <signal.h>
 #include <stdio.h>
@@ -60,4 +61,6 @@ void handle_backspace(struct State *);
 
 /* globals */
 struct termios TERM_SETS; // old terminal settings
-struct list *HISTORY;
+int WIDTH;
+
+#endif

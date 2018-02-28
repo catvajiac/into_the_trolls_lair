@@ -1,17 +1,11 @@
-#include <string.h>
-#include <stdio.h>
 #include "trolls_lair.h"
 
 void string_strip(char *s) {
   if (!s) {
     return;
   }
-  char *c = s;
-  while (c && *c != '\n') {
-    c++;
-  }
-
-  if (c - s < strlen(s)) {
+  char *c = s + strlen(s) - 1;
+  if (*c == '\n') {
     *c = 0;
   }
 }
@@ -54,6 +48,16 @@ int getch(FILE *stream) {
   return ch;
 }
 
+void print(char *s) {
+  string_strip(s);
+  int count = 0;
+  while (strlen(s)) {
+    printf("%.*s\n", WIDTH, s);
+    count += WIDTH;
+    s += WIDTH;
+  }
+}
+
 struct list *read_room(char * room) {
   printf("\n");
   char * path = "rooms/";
@@ -65,13 +69,13 @@ struct list *read_room(char * room) {
 
   char buffer[BUFSIZ];
   FILE *input;
-                                                                                                                    
+
   if (!(input = fopen(roompath, "r"))) {
     return NULL;
   }
 
   while (fgets(buffer, BUFSIZ, input) && strcmp(buffer, "\n") != 0) {
-    printf(buffer);
+    print(buffer);
     memset(buffer, 0, BUFSIZ);
   }
 
