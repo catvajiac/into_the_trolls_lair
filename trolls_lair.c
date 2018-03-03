@@ -43,14 +43,12 @@ int main(int argc, char *argv[]) {
 
   state->current_room = strdup("welcome");
   read_room(state);
-  state->current_room = strdup("presmise");
+  state->current_room = strdup("premise");
   read_room(state);
   state->current_room = strdup("bui chair");
   state->commands = read_room(state);
   print("What would you like to do?\n> ", false, YELLOW);
-  printf("\x1B");
   sleep(1);
-  printf("[31mstuff\n");
 
   while (status != END) {
     while ((status = handle_key(state)) == REGULAR) {}
