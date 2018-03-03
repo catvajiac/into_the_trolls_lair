@@ -1,5 +1,6 @@
 #include "trolls_lair.h"
 
+/* strips newline from string */
 void string_strip(char *s) {
   if (!s) {
     return;
@@ -10,9 +11,10 @@ void string_strip(char *s) {
   }
 }
 
+/* helper function for string_translate */
 int find_char_in_array(char * array, char c) {
   int count = 0;
-  char * array_ptr = array;
+  char *array_ptr = array;
   while (*array_ptr) {
     if (*array_ptr == c) {
       return count;
@@ -22,8 +24,9 @@ int find_char_in_array(char * array, char c) {
   return -1; 
 }
 
-char * string_translate(char *s, char *from, char *to) {
-  char * s_ptr = s;
+/* replaces chars in s */
+char *string_translate(char *s, char *from, char *to) {
+  char *s_ptr = s;
   int index;
   if (strlen(to) == 0) {
     return s;
@@ -38,6 +41,7 @@ char * string_translate(char *s, char *from, char *to) {
   return s;
 }
 
+/* get character from stdin with changing terminal settings */
 int getch(FILE *stream) {
   struct termios new_t;
   tcgetattr(STDIN_FILENO, &new_t);
@@ -48,20 +52,37 @@ int getch(FILE *stream) {
   return ch;
 }
 
-void print(char *s) {
-  string_strip(s);
-  int count = 0;
-  while (strlen(s)) {
-    printf("%.*s\n", WIDTH, s);
-    count += WIDTH;
-    s += WIDTH;
+/* print function that respects a maximum width */
+void print(char *s, bool newline, char color[]) {
+  if (!s) {
+    return;
   }
+  s = strdup(s);
+  string_strip(s);
+  int curr_width = 0;
+  char *word = strtok(s, " ");
+
+  printf(color);
+  while (word && strlen(word)) {
+    while (word && curr_width + strlen(word) < WIDTH) {
+      printf("%s ", word);
+      curr_width += strlen(word) + 1;
+      word = strtok(0, " ");
+    }
+    if (newline) {
+      printf("\n");
+    }
+    curr_width = 0;
+  }
+  printf(NOCOLOR);
+  free(s);
 }
 
-struct list *read_room(char * room) {
+/* read room file */
+struct list *read_room(struct State *state) {
   printf("\n");
   char * path = "rooms/";
-  room = string_translate(room, " ", "_");
+  char *room = string_translate(state->current_room, " ", "_");
 
   char roompath[strlen(path) + strlen(room) + 1]; 
   strcpy(roompath, path);
@@ -74,15 +95,21 @@ struct list *read_room(char * room) {
     return NULL;
   }
 
+  /* read room string */
   while (fgets(buffer, BUFSIZ, input) && strcmp(buffer, "\n") != 0) {
-    print(buffer);
+    if (strcmp(room, "welcome") == 0) { // special, want spaces preserved
+      printf("%s%s%s", GREEN, buffer, NOCOLOR);
+    } else {
+      print(buffer, true, GREEN);
+    }
     memset(buffer, 0, BUFSIZ);
   }
 
-  return parse_rules(input);
+  return parse_rules(input, state);
 }
 
-struct list * parse_rules(FILE *input) {
+/* rules for moving to the next room */
+struct list * parse_rules(FILE *input, struct State *state) {
   struct list *commands = list_create();
   char buffer[BUFSIZ];
 
@@ -91,17 +118,30 @@ struct list * parse_rules(FILE *input) {
     char *target   = strtok(0, ":");
     char *string   = strtok(0, ":");
     char *unlock_s = strtok(0, ":");
+    char *item_s   = strtok(0, ":");
     if (!source || !target) {
       return commands;
     }
+
     int unlock;
+    int item;
     string_strip(unlock_s);
-    if (!unlock_s) {
-      unlock = 0;
+    string_strip(item_s);
+    if (item_s) {
+      item = atoi(item_s);
     } else {
-      unlock = atoi(unlock_s);
+      item = -1;
     }
-    list_push_front(commands, source, target, string, unlock);
+
+    if (unlock_s) {
+      unlock = atoi(unlock_s);
+    } else {
+      unlock = -1;
+    }
+
+    if (!(state->items & 1<<item) && !(state->items & 1<<unlock)) {
+      list_push_front(commands, source, target, string, unlock, item);
+    }
     memset(buffer, 0, BUFSIZ);
   }
 
