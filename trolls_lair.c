@@ -4,30 +4,53 @@
 Todos todos;
 
 int main(int argc, char *argv[]) {
+  /* parse command line args */
   WIDTH = 80;
+  HEIGHT = 100;
   int arg = 1;
   while (arg < argc) {
-    if (strcmp(argv[arg], "-w") == 0) {
-      WIDTH = atoi(argv[++arg]);
+    printf("%s\n", argv[arg]);
+    if (strlen(argv[arg]) != 2 || argv[arg][0] != '-') {
+      printf("gimme good args bruh\n");
+      help(1);
+    }
+    switch (argv[arg][1]) {
+      case 'W':
+        WIDTH = atoi(argv[++arg]);
+        break;
+      case 'H':
+        HEIGHT = atoi(argv[++arg]); 
+        break;
+      case 'h':
+        help(0);
+        break;
     }
     arg++;
   }
-  tcgetattr(STDIN_FILENO, &TERM_SETS);
+
+  tcgetattr(STDIN_FILENO, &TERM_SETS); // terminal settings
   signal(SIGINT, handle_quit);
   signal(SIGHUP, handle_quit);
 
+  /* intialize status: contains game state info */
   Status status;
-  struct State * state = malloc(sizeof(struct State));
+  struct State *state = malloc(sizeof(struct State));
+  global_state = state; // used for cleanup only
   state->history = list_create();
   state->commands = list_create();
-  state->current_room = strdup("bui chair");
   state->buffer = malloc(BUFSIZ);
-  list_push_front(state->history, "", "", "", 0); // push dummy node
+  list_push_front(state->history, "", "", "", 0, 0);
 
-  read_room("welcome");
-  read_room("premise");
-  state->commands = read_room(state->current_room);
-  print("What would you like to do?\n> ");
+  state->current_room = strdup("welcome");
+  read_room(state);
+  state->current_room = strdup("presmise");
+  read_room(state);
+  state->current_room = strdup("bui chair");
+  state->commands = read_room(state);
+  print("What would you like to do?\n> ", false, YELLOW);
+  printf("\x1B");
+  sleep(1);
+  printf("[31mstuff\n");
 
   while (status != END) {
     while ((status = handle_key(state)) == REGULAR) {}

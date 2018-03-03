@@ -11,9 +11,10 @@
 #include "list.h"
 
 typedef enum {
-  KEYBOARD,
-  GRAPHS,
-} items;
+  KEYBOARD  = 1<<1,
+  GRAPHS    = 1<<2, 
+} Items;
+
 
 typedef enum {
   REGULAR,
@@ -35,6 +36,7 @@ struct State {
   struct list *history;
   struct list *commands;
   struct node *curr_history;
+  Items items;
   char *buffer;
   char *current_room;
   int index;
@@ -45,22 +47,36 @@ struct State {
 void string_strip(char *);
 char *string_translate(char *, char *, char *);
 int getch(FILE *);
-struct list *parse_rules(FILE *);
-struct list *read_room(char *);
+struct list *parse_rules(FILE *, struct State *);
+struct list *read_room(struct State *);
+void print(char *, bool, char[]);
 
 /* handlers */
 void handle_look(char *);
 void handle_quit(int);
-char *handle_command(struct list*, char *);
+void help(int);
+struct node *handle_command(struct State *);
 Status decide_arrow();
 void handle_arrow(Status, struct State *);
 void handle_enter(Status, struct State *);
 void handle_special_key(Status, struct State *);
 Status handle_key(struct State *);
 void handle_backspace(struct State *);
+void handle_items(struct State *);
 
 /* globals */
 struct termios TERM_SETS; // old terminal settings
-int WIDTH;
+struct State *global_state;
+int WIDTH, HEIGHT;
+
+/* terminal color */
+#define NOCOLOR "\x1B[0m"
+#define RED     "\x1B[31m"
+#define GREEN   "\x1B[32m"
+#define YELLOW  "\x1B[33m"
+#define BLUE    "\x1B[34m"
+#define MAGENTA "\x1B[35m"
+#define CYAN    "\x1B[36m"
+#define WHITE   "\x1B[37m"
 
 #endif
