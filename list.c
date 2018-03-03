@@ -5,12 +5,13 @@
 #include "list.h"
 
 /* node definitions */
-struct node * node_create(char *source, char *target, char *string, int unlock, struct node *prev, struct node *next) {
+struct node * node_create(char *source, char *target, char *string, int unlock, int item, struct node *prev, struct node *next) {
   struct node *n = malloc(sizeof(*next));
   n->source = strdup(source);
   n->target = strdup(target);
   n->string = strdup(string);
   n->unlock = unlock;
+  n->item   = item;
   n->next   = next;
   n->prev   = prev;
   return n;
@@ -41,6 +42,7 @@ void node_dump(struct node *n, FILE *stream) {
     fprintf(stream, "  target: %s\n", n->target);
     fprintf(stream, "  string: %s\n", n->string);
     fprintf(stream, "  unlock: %d\n", n->unlock);
+    fprintf(stream, "  item  : %d\n", n->item);
   } else {
     fprintf(stream, "<null>\n");
   }
@@ -64,8 +66,8 @@ struct list * list_delete(struct list *l) {
 }
 
 
-struct node *list_push_front(struct list *l, char *s, char *t, char *str, int unlock) {
-  struct node *n = node_create(s, t, str, unlock, NULL, l->head);
+struct node *list_push_front(struct list *l, char *s, char *t, char *str, int unlock, int item) {
+  struct node *n = node_create(s, t, str, unlock, item, NULL, l->head);
   l->head = n;
   if (l->size == 0) {
     l->tail = l->head;
@@ -79,8 +81,8 @@ struct node *list_push_front(struct list *l, char *s, char *t, char *str, int un
 }
 
 
-void list_push_back(struct list *l, char *s, char *t, char *str, int unlock) {
-  struct node *n = node_create(s, t, str, unlock, l->tail, NULL);
+void list_push_back(struct list *l, char *s, char *t, char *str, int unlock, int item) {
+  struct node *n = node_create(s, t, str, unlock, item, l->tail, NULL);
   l->head = n;
   if (l->size >= 1) {
     l->tail->next = n;
