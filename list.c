@@ -5,22 +5,23 @@
 #include "list.h"
 
 /* node definitions */
-struct node * node_create(char *source, char *target, char *string, int unlock, int item, struct node *prev, struct node *next) {
-  struct node *n = malloc(sizeof(*next));
-  n->source = strdup(source);
-  n->target = strdup(target);
-  n->string = strdup(string);
+Node * node_create(char *s, char *t, char *str, int unlock, int item, int todo, Node *prev, Node *next) {
+  Node *n = malloc(sizeof(*next));
+  n->source = strdup(s);
+  n->target = strdup(t);
+  n->string = strdup(str);
   n->unlock = unlock;
   n->item   = item;
+  n->todo   = todo;
   n->next   = next;
   n->prev   = prev;
   return n;
 }
 
 
-struct node * node_delete(struct node *n, bool recursive) {
-  struct node *n_ptr = n;
-  struct node *n_next = n->next;
+Node * node_delete(Node *n, bool recursive) {
+  Node *n_ptr = n;
+  Node *n_next = n->next;
   free(n->string);
   free(n);
   while (recursive && n_next) {
@@ -35,7 +36,7 @@ struct node * node_delete(struct node *n, bool recursive) {
 }
 
 
-void node_dump(struct node *n, FILE *stream) {
+void node_dump(Node *n, FILE *stream) {
   if (n) {
     printf("node:\n");
     fprintf(stream, "  source: %s\n", n->source);
@@ -50,8 +51,8 @@ void node_dump(struct node *n, FILE *stream) {
 
 
 /* list definitions */
-struct list * list_create() {
-  struct list *l = malloc(sizeof(struct list));
+List * list_create() {
+  List *l = malloc(sizeof(List));
   l->head = 0;
   l->tail = 0;
   l->size = 0;
@@ -59,15 +60,15 @@ struct list * list_create() {
 }
 
 
-struct list * list_delete(struct list *l) {
+List * list_delete(List *l) {
   node_delete(l->head, 1); 
   free(l);
   return NULL;
 }
 
 
-struct node *list_push_front(struct list *l, char *s, char *t, char *str, int unlock, int item) {
-  struct node *n = node_create(s, t, str, unlock, item, NULL, l->head);
+Node *list_push_front(List *l, char *s, char *t, char *str, int unlock, int item, int todo) {
+  Node *n = node_create(s, t, str, unlock, item, todo, NULL, l->head);
   l->head = n;
   if (l->size == 0) {
     l->tail = l->head;
@@ -81,8 +82,8 @@ struct node *list_push_front(struct list *l, char *s, char *t, char *str, int un
 }
 
 
-void list_push_back(struct list *l, char *s, char *t, char *str, int unlock, int item) {
-  struct node *n = node_create(s, t, str, unlock, item, l->tail, NULL);
+void list_push_back(List *l, char *s, char *t, char *str, int unlock, int item, int todo) {
+  Node *n = node_create(s, t, str, unlock, item, todo, l->tail, NULL);
   l->head = n;
   if (l->size >= 1) {
     l->tail->next = n;
@@ -96,8 +97,36 @@ void list_push_back(struct list *l, char *s, char *t, char *str, int unlock, int
   l->size++;
 }
 
-void list_dump(struct list *l, FILE *stream) {
-  struct node *n_ptr = l->head;
+void list_insert(List *l, char *s, char *t, char *str, int unlock, int
+item, int todo, int position) {
+  if (position > l->size) {
+    printf("no\n");
+    return;
+  }
+
+  Node *n = node_create(s, t, str, unlock, item, todo, NULL, NULL);
+  Node *prev = 0;
+  Node *curr = l->head;
+  int count = 0;
+
+  while (curr && count < position) {
+    count++;
+    prev = curr;
+    curr = curr->next;
+  }
+
+  if (prev) {
+    prev->next = n;
+  }
+  n->prev = prev;
+  if (curr) {
+    curr->prev = n;
+  }
+  n->next = curr;
+}
+
+void list_dump(List *l, FILE *stream) {
+  Node *n_ptr = l->head;
   while (n_ptr) {
     node_dump(n_ptr, stdout);
     n_ptr = n_ptr->next;

@@ -43,7 +43,7 @@ char *string_translate(char *s, char *from, char *to) {
 
 /* get character from stdin with changing terminal settings */
 int getch(FILE *stream) {
-  struct termios new_t;
+  Termios new_t;
   tcgetattr(STDIN_FILENO, &new_t);
   new_t.c_lflag &= ~(ICANON | ECHO);
   tcsetattr(STDIN_FILENO, TCSANOW, &new_t); // apply new settings
@@ -52,7 +52,7 @@ int getch(FILE *stream) {
   return ch;
 }
 
-/* print function that respects a maximum width */
+/* print function that respects a maximum width and colors */
 void print(char *s, bool newline, char color[]) {
   if (!s) {
     return;
@@ -79,7 +79,7 @@ void print(char *s, bool newline, char color[]) {
 }
 
 /* read room file */
-struct list *read_room(struct State *state) {
+List *read_room(State *state) {
   printf("\n");
   char * path = "rooms/";
   char *room = string_translate(state->current_room, " ", "_");
@@ -97,7 +97,7 @@ struct list *read_room(struct State *state) {
 
   /* read room string */
   while (fgets(buffer, BUFSIZ, input) && strcmp(buffer, "\n") != 0) {
-    if (strcmp(room, "welcome") == 0) { // special, want spaces preserved
+    if (streq(room, "welcome")) { // special, want spaces preserved
       printf("%s%s%s", GREEN, buffer, NOCOLOR);
     } else {
       print(buffer, true, GREEN);
@@ -108,9 +108,18 @@ struct list *read_room(struct State *state) {
   return parse_rules(input, state);
 }
 
+int integer(char *s) {
+  string_strip(s);
+  if (s) {
+    return atoi(s);
+  }
+
+  return -1;
+}
+
 /* rules for moving to the next room */
-struct list * parse_rules(FILE *input, struct State *state) {
-  struct list *commands = list_create();
+List * parse_rules(FILE *input, State *state) {
+  List *commands = list_create();
   char buffer[BUFSIZ];
 
   while (fgets(buffer, BUFSIZ, input)) {
@@ -119,32 +128,42 @@ struct list * parse_rules(FILE *input, struct State *state) {
     char *string   = strtok(0, ":");
     char *unlock_s = strtok(0, ":");
     char *item_s   = strtok(0, ":");
+    char *todo_s   = strtok(0, ":");
     if (!source || !target) {
       return commands;
     }
 
-    int unlock;
-    int item;
-    string_strip(unlock_s);
-    string_strip(item_s);
-    if (item_s) {
-      item = atoi(item_s);
-    } else {
-      item = -1;
-    }
+    int unlock = integer(unlock_s);
+    int item = integer(item_s);
+    int todo = integer(todo_s);
 
-    if (unlock_s) {
-      unlock = atoi(unlock_s);
-    } else {
-      unlock = -1;
-    }
+    bool have_item = (state->items & 1<<item);
+    bool is_unlocked = (state->items & 1<<unlock) || unlock <= 0;
 
-    if (!(state->items & 1<<item) && !(state->items & 1<<unlock)) {
-      list_push_front(commands, source, target, string, unlock, item);
+    if (!have_item && is_unlocked) {
+      list_push_front(commands, source, target, string, unlock, item, todo);
     }
     memset(buffer, 0, BUFSIZ);
   }
 
   fclose(input);
   return commands;
+}
+
+void cowsay(char *cow, char *string) {
+  pid_t pid = fork();
+  if (pid < 0) {
+    fprintf(stderr, "fork failed...%s", strerror(errno));
+    return;
+  }
+
+  char *args[] = {"cowsay", "-f", cow, string, NULL};
+  if (pid == 0) {
+    if (execvp("cowsay", args) < 0) {
+      fprintf(stderr, "exec failed...%s", strerror(errno));
+      return;
+    }
+  } else {
+    wait(NULL);
+  }
 }

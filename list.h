@@ -4,32 +4,34 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-struct node {
+typedef struct Node {
   char *source;
   char *target;
   char *string;
   int unlock;
   int item;
-  struct node *next;
-  struct node *prev;
-};
+  int todo;
+  struct Node *next;
+  struct Node *prev;
+} Node;
 
-struct list {
-  struct node *head;
-  struct node *tail;
-  size_t       size;
-};
+typedef struct {
+  Node *head;
+  Node *tail;
+  size_t size;
+} List;
 
 /* node prototypes */
-struct node * node_create(char *, char *, char *, int, int, struct node *, struct node*);
-struct node * node_delete(struct node *, bool);
-void node_dump(struct node *, FILE *);
+Node *node_create(char *, char *, char *, int, int, int, Node *, Node*);
+Node * node_delete(Node *, bool);
+void node_dump(Node *, FILE *);
 
 /* list prototypes */
-struct list * list_create();
-struct list * list_delete(struct list *);
-struct node *list_push_front(struct list *, char *, char *, char *, int, int);
-void list_push_back(struct list *, char *, char *, char *, int, int);
-void list_dump(struct list *, FILE *);
+List *list_create();
+List *list_delete(List *);
+Node *list_push_front(List *, char *, char *, char *, int, int, int);
+void list_push_back(List *, char *, char *, char *, int, int, int);
+void list_insert(List *, char *, char *, char *, int, int, int, int);
+void list_dump(List *, FILE *);
 
 #endif
